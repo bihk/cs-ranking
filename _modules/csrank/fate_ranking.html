@@ -1,0 +1,926 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>csrank.fate_ranking &mdash; csrank 1.0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> csrank
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html">API Reference</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">csrank</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>csrank.fate_ranking</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for csrank.fate_ranking</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="k">import</span> <span class="n">ABCMeta</span><span class="p">,</span> <span class="n">abstractmethod</span>
+
+<span class="kn">import</span> <span class="nn">keras.backend</span> <span class="k">as</span> <span class="nn">K</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">keras</span> <span class="k">import</span> <span class="n">optimizers</span>
+<span class="kn">from</span> <span class="nn">keras.layers</span> <span class="k">import</span> <span class="n">Input</span><span class="p">,</span> <span class="n">Dense</span>
+<span class="kn">from</span> <span class="nn">keras.layers.merge</span> <span class="k">import</span> <span class="n">concatenate</span>
+<span class="kn">from</span> <span class="nn">keras.models</span> <span class="k">import</span> <span class="n">Model</span>
+<span class="kn">from</span> <span class="nn">keras.regularizers</span> <span class="k">import</span> <span class="n">l2</span>
+<span class="kn">from</span> <span class="nn">sklearn.preprocessing</span> <span class="k">import</span> <span class="n">LabelBinarizer</span>
+<span class="kn">from</span> <span class="nn">sklearn.utils</span> <span class="k">import</span> <span class="n">check_random_state</span>
+
+<span class="kn">from</span> <span class="nn">csrank.discretechoice.discrete_choice</span> <span class="k">import</span> <span class="n">ObjectChooser</span>
+<span class="kn">from</span> <span class="nn">csrank.dyadranking.contextual_ranking</span> <span class="k">import</span> <span class="n">ContextualRanker</span>
+<span class="kn">from</span> <span class="nn">csrank.labelranking.label_ranker</span> <span class="k">import</span> <span class="n">LabelRanker</span>
+<span class="kn">from</span> <span class="nn">csrank.layers</span> <span class="k">import</span> <span class="n">DeepSet</span>
+<span class="kn">from</span> <span class="nn">csrank.losses</span> <span class="k">import</span> <span class="n">hinged_rank_loss</span><span class="p">,</span> <span class="n">smooth_rank_loss</span>
+<span class="kn">from</span> <span class="nn">csrank.metrics</span> <span class="k">import</span> <span class="n">zero_one_rank_loss_for_scores_ties</span><span class="p">,</span> \
+    <span class="n">zero_one_rank_loss_for_scores</span>
+<span class="kn">from</span> <span class="nn">csrank.objectranking.object_ranker</span> <span class="k">import</span> <span class="n">ObjectRanker</span>
+<span class="kn">from</span> <span class="nn">csrank.tunable</span> <span class="k">import</span> <span class="n">Tunable</span>
+<span class="kn">from</span> <span class="nn">csrank.util</span> <span class="k">import</span> <span class="n">scores_to_rankings</span><span class="p">,</span> <span class="n">create_input_lambda</span><span class="p">,</span> <span class="n">tensorify</span><span class="p">,</span> \
+    <span class="n">print_dictionary</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;FATELabelRanker&#39;</span><span class="p">,</span> <span class="s1">&#39;FATEObjectRanker&#39;</span><span class="p">,</span> <span class="s1">&#39;FATEContextualRanker&#39;</span><span class="p">,</span> <span class="s1">&#39;FATEObjectChooser&#39;</span><span class="p">]</span>
+
+
+<span class="k">class</span> <span class="nc">FATERankingCore</span><span class="p">(</span><span class="n">Tunable</span><span class="p">,</span> <span class="n">metaclass</span><span class="o">=</span><span class="n">ABCMeta</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_hidden_joint_layers</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">n_hidden_joint_units</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+                 <span class="n">activation</span><span class="o">=</span><span class="s1">&#39;selu&#39;</span><span class="p">,</span> <span class="n">kernel_initializer</span><span class="o">=</span><span class="s1">&#39;lecun_normal&#39;</span><span class="p">,</span>
+                 <span class="n">kernel_regularizer</span><span class="o">=</span><span class="n">l2</span><span class="p">(</span><span class="n">l</span><span class="o">=</span><span class="mf">0.01</span><span class="p">),</span>
+                 <span class="n">optimizer</span><span class="o">=</span><span class="s2">&quot;adam&quot;</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span>
+                 <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">FATERankingCore</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">random_state</span> <span class="o">=</span> <span class="n">check_random_state</span><span class="p">(</span><span class="n">random_state</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_hidden_joint_layers</span> <span class="o">=</span> <span class="n">n_hidden_joint_layers</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_hidden_joint_units</span> <span class="o">=</span> <span class="n">n_hidden_joint_units</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">activation</span> <span class="o">=</span> <span class="n">activation</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kernel_initializer</span> <span class="o">=</span> <span class="n">kernel_initializer</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kernel_regularizer</span> <span class="o">=</span> <span class="n">kernel_regularizer</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">=</span> <span class="n">batch_size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span> <span class="o">=</span> <span class="n">optimizers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">optimizer</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__kwargs__</span> <span class="o">=</span> <span class="n">kwargs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_construct_layers</span><span class="p">(</span><span class="n">activation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">activation</span><span class="p">,</span>
+                               <span class="n">kernel_initializer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_initializer</span><span class="p">,</span>
+                               <span class="n">kernel_regularizer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_regularizer</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_construct_layers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Construct basic layers shared by all ranking algorithms:</span>
+<span class="sd">         * Joint dense hidden layers</span>
+<span class="sd">         * Output scoring layer</span>
+
+<span class="sd">        Connecting the layers is done in join_input_layers and will be done in</span>
+<span class="sd">        implementing classes.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s2">&quot;Construct joint layers hidden units </span><span class="si">{}</span><span class="s2"> and layers </span><span class="si">{}</span><span class="s2"> &quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">n_hidden_joint_units</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">n_hidden_joint_layers</span><span class="p">))</span>
+        <span class="c1"># Create joint hidden layers:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">joint_layers</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_hidden_joint_layers</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">joint_layers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">Dense</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_hidden_joint_units</span><span class="p">,</span>
+                      <span class="n">name</span><span class="o">=</span><span class="s2">&quot;joint_layer_</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">),</span>
+                      <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Construct output score node&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scorer</span> <span class="o">=</span> <span class="n">Dense</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;output_node&quot;</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="s1">&#39;linear&#39;</span><span class="p">,</span>
+                            <span class="n">kernel_regularizer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_regularizer</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">join_input_layers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_layer</span><span class="p">,</span> <span class="o">*</span><span class="n">layers</span><span class="p">,</span> <span class="n">n_layers</span><span class="p">,</span> <span class="n">n_objects</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Accepts input tensors and an arbitrary number of feature tensors</span>
+<span class="sd">        and concatenates them into a joint layer.</span>
+<span class="sd">        The input layers need to be given separately, because they need to be</span>
+<span class="sd">        iterated over.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        input_layer : input tensor (n_objects, n_features)</span>
+<span class="sd">        layers : tensors</span>
+<span class="sd">            A number of tensors representing feature representations</span>
+<span class="sd">        n_layers : int</span>
+<span class="sd">            Number of joint hidden layers</span>
+<span class="sd">        n_objects : int</span>
+<span class="sd">            Number of objects</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Joining set representation and joint layers&quot;</span><span class="p">)</span>
+        <span class="n">scores</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="n">inputs</span> <span class="o">=</span> <span class="p">[</span><span class="n">create_input_lambda</span><span class="p">(</span><span class="n">i</span><span class="p">)(</span><span class="n">input_layer</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span>
+                  <span class="nb">range</span><span class="p">(</span><span class="n">n_objects</span><span class="p">)]</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_objects</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">n_layers</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">joint</span> <span class="o">=</span> <span class="n">concatenate</span><span class="p">([</span><span class="n">inputs</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="o">*</span><span class="n">layers</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">joint</span> <span class="o">=</span> <span class="n">inputs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">joint_layers</span><span class="p">)):</span>
+                <span class="n">joint</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">joint_layers</span><span class="p">[</span><span class="n">j</span><span class="p">](</span><span class="n">joint</span><span class="p">)</span>
+            <span class="n">scores</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scorer</span><span class="p">(</span><span class="n">joint</span><span class="p">))</span>
+        <span class="n">scores</span> <span class="o">=</span> <span class="n">concatenate</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;final_scores&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Done&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">scores</span>
+
+    <span class="k">def</span> <span class="nf">set_tunable_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                               <span class="n">n_hidden_joint_units</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+                               <span class="n">n_hidden_joint_layers</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                               <span class="n">reg_strength</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span>
+                               <span class="n">learning_rate</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span>
+                               <span class="n">batch_size</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span>
+                               <span class="o">**</span><span class="n">point</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_hidden_joint_layers</span> <span class="o">=</span> <span class="n">n_hidden_joint_layers</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_hidden_joint_units</span> <span class="o">=</span> <span class="n">n_hidden_joint_units</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kernel_regularizer</span> <span class="o">=</span> <span class="n">l2</span><span class="p">(</span><span class="n">reg_strength</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">=</span> <span class="n">batch_size</span>
+        <span class="n">K</span><span class="o">.</span><span class="n">set_value</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="o">.</span><span class="n">lr</span><span class="p">,</span> <span class="n">learning_rate</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_construct_layers</span><span class="p">(</span>
+            <span class="n">activation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">activation</span><span class="p">,</span>
+            <span class="n">kernel_initializer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_initializer</span><span class="p">,</span>
+            <span class="n">kernel_regularizer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_regularizer</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">point</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;This ranking algorithm does not support&#39;</span>
+                                <span class="s1">&#39; tunable parameters&#39;</span>
+                                <span class="s1">&#39; called: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">print_dictionary</span><span class="p">(</span><span class="n">point</span><span class="p">)))</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Fit the general ranking algorithm. The implementing classes need to</span>
+<span class="sd">        handle the feature information and output representation.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        self : object</span>
+<span class="sd">            Returns self.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Predict a suitable ranking output for the given ranking problem.&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+
+<span class="k">class</span> <span class="nc">FATEObjectRankingCore</span><span class="p">(</span><span class="n">FATERankingCore</span><span class="p">,</span> <span class="n">metaclass</span><span class="o">=</span><span class="n">ABCMeta</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_object_features</span><span class="p">,</span>
+                 <span class="n">n_hidden_set_layers</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_hidden_set_units</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                 <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">FATERankingCore</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger_gorc</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">FATEObjectRankingCore</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_hidden_set_layers</span> <span class="o">=</span> <span class="n">n_hidden_set_layers</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_hidden_set_units</span> <span class="o">=</span> <span class="n">n_hidden_set_units</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_object_features</span> <span class="o">=</span> <span class="n">n_object_features</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger_gorc</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;args: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_create_set_layers</span><span class="p">(</span><span class="n">activation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">activation</span><span class="p">,</span>
+                                <span class="n">kernel_initializer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_initializer</span><span class="p">,</span>
+                                <span class="n">kernel_regularizer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_regularizer</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_variadic</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">def</span> <span class="nf">_create_set_layers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Create layers for learning the representation of the query set.</span>
+
+<span class="sd">        The actual connection of the layers is done during fitting, since we</span>
+<span class="sd">        do not know the size(s) of the set(s) in advance.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger_gorc</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger_gorc</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s2">&quot;Creating set layers with set units </span><span class="si">{}</span><span class="s2"> set layer </span><span class="si">{}</span><span class="s2"> &quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">n_hidden_set_units</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">n_hidden_set_layers</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_hidden_set_layers</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_layer</span> <span class="o">=</span> <span class="n">DeepSet</span><span class="p">(</span><span class="n">units</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_hidden_set_units</span><span class="p">,</span>
+                                     <span class="n">layers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_hidden_set_layers</span><span class="p">,</span>
+                                     <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_layer</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_bucket_frequencies</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">min_bucket_size</span><span class="o">=</span><span class="mi">32</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculates the relative frequency of each ranking bucket.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X : dict</span>
+<span class="sd">            map from n_objects to object queries</span>
+<span class="sd">        min_bucket_size : int</span>
+<span class="sd">            Minimum number of instances for a query size to be considered for</span>
+<span class="sd">            the frequency calculation</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        freq : dict</span>
+<span class="sd">            map from n_objects to frequency in float</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">freq</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="n">total</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="k">for</span> <span class="n">n_objects</span><span class="p">,</span> <span class="n">arr</span> <span class="ow">in</span> <span class="n">X</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">n_instances</span> <span class="o">=</span> <span class="n">arr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">n_instances</span> <span class="o">&gt;=</span> <span class="n">min_bucket_size</span><span class="p">:</span>
+                <span class="n">freq</span><span class="p">[</span><span class="n">n_objects</span><span class="p">]</span> <span class="o">=</span> <span class="n">n_instances</span>
+                <span class="n">total</span> <span class="o">+=</span> <span class="n">freq</span><span class="p">[</span><span class="n">n_objects</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">freq</span><span class="p">[</span><span class="n">n_objects</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">n_objects</span> <span class="ow">in</span> <span class="n">freq</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">freq</span><span class="p">[</span><span class="n">n_objects</span><span class="p">]</span> <span class="o">/=</span> <span class="n">total</span>
+        <span class="k">return</span> <span class="n">freq</span>
+
+    <span class="k">def</span> <span class="nf">_construct_models</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">buckets</span><span class="p">):</span>
+        <span class="n">models</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="n">n_features</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_object_features</span>
+
+        <span class="k">for</span> <span class="n">n_objects</span> <span class="ow">in</span> <span class="n">buckets</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">input_layer</span> <span class="o">=</span> <span class="n">Input</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">n_objects</span><span class="p">,</span> <span class="n">n_features</span><span class="p">),</span>
+                                <span class="n">name</span><span class="o">=</span><span class="s2">&quot;input_node&quot;</span><span class="p">)</span>
+
+            <span class="n">set_repr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_layer</span><span class="p">(</span><span class="n">input_layer</span><span class="p">)</span>
+
+            <span class="n">scores</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">join_input_layers</span><span class="p">(</span><span class="n">input_layer</span><span class="p">,</span> <span class="n">set_repr</span><span class="p">,</span>
+                                            <span class="n">n_objects</span><span class="o">=</span><span class="n">n_objects</span><span class="p">,</span>
+                                            <span class="n">n_layers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_hidden_set_layers</span><span class="p">)</span>
+            <span class="n">model</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">input_layer</span><span class="p">,</span> <span class="n">outputs</span><span class="o">=</span><span class="n">scores</span><span class="p">)</span>
+            <span class="n">model</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">loss</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">loss_function</span><span class="p">,</span>
+                          <span class="n">optimizer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="p">,</span>
+                          <span class="n">metrics</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">metrics</span><span class="p">)</span>
+            <span class="n">models</span><span class="p">[</span><span class="n">n_objects</span><span class="p">]</span> <span class="o">=</span> <span class="n">model</span>
+        <span class="k">return</span> <span class="n">models</span>
+
+    <span class="k">def</span> <span class="nf">get_weights</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_variadic</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">models_</span><span class="o">.</span><span class="n">values</span><span class="p">())[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get_weights</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">get_weights</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">set_weights</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">weights</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_variadic</span><span class="p">:</span>
+            <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">models_</span><span class="o">.</span><span class="n">values</span><span class="p">())[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_weights</span><span class="p">(</span><span class="n">weights</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">set_weights</span><span class="p">(</span><span class="n">weights</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">Y</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">generator</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="mi">35</span><span class="p">,</span> <span class="n">inner_epochs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+             <span class="n">callbacks</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">validation_split</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">global_lr</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+             <span class="n">global_momentum</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span> <span class="n">min_bucket_size</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">refit</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+             <span class="n">optimizer</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">optimizer</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span> <span class="o">=</span> <span class="n">optimizer</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">generator</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Variadic training does not support&quot;</span>
+                                  <span class="s2">&quot; generators yet.&quot;</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">is_variadic</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="n">decay_rate</span> <span class="o">=</span> <span class="n">global_lr</span> <span class="o">/</span> <span class="n">epochs</span>
+            <span class="n">learning_rate</span> <span class="o">=</span> <span class="n">global_lr</span>
+            <span class="n">freq</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bucket_frequencies</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">min_bucket_size</span><span class="o">=</span><span class="n">min_bucket_size</span><span class="p">)</span>
+            <span class="n">bucket_ids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
+
+            <span class="c1">#  Create models which need to be trained</span>
+            <span class="c1">#  Note, that the models share all their weights, the only</span>
+            <span class="c1">#  difference is the compute graph constructed for back propagation.</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;models_&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">refit</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">models_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_construct_models</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+
+            <span class="c1">#  Iterate training</span>
+            <span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">epochs</span><span class="p">):</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Epoch: </span><span class="si">{}</span><span class="s2">, Learning rate: </span><span class="si">{}</span><span class="s2">&quot;</span>
+                                 <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">epoch</span><span class="p">,</span> <span class="n">learning_rate</span><span class="p">))</span>
+
+                <span class="c1"># In the spirit of mini-batch SGD we also shuffle the buckets</span>
+                <span class="c1"># each epoch:</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">bucket_ids</span><span class="p">)</span>
+
+                <span class="n">w_before</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_weights</span><span class="p">())</span>
+
+                <span class="k">for</span> <span class="n">bucket_id</span> <span class="ow">in</span> <span class="n">bucket_ids</span><span class="p">:</span>
+
+                    <span class="c1"># Skip query sizes with too few instances:</span>
+                    <span class="k">if</span> <span class="n">X</span><span class="p">[</span><span class="n">bucket_id</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">min_bucket_size</span><span class="p">:</span>
+                        <span class="k">continue</span>
+
+                    <span class="c1"># self.set_weights(start)</span>
+                    <span class="n">x</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="n">bucket_id</span><span class="p">]</span>
+                    <span class="n">y</span> <span class="o">=</span> <span class="n">Y</span><span class="p">[</span><span class="n">bucket_id</span><span class="p">]</span>
+
+                    <span class="c1"># Save weight vector for momentum:</span>
+                    <span class="n">w_old</span> <span class="o">=</span> <span class="n">w_before</span>
+                    <span class="n">w_before</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_weights</span><span class="p">())</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">models_</span><span class="p">[</span><span class="n">bucket_id</span><span class="p">]</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
+                        <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span>
+                        <span class="n">epochs</span><span class="o">=</span><span class="n">inner_epochs</span><span class="p">,</span>
+                        <span class="n">batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span>
+                        <span class="n">validation_split</span><span class="o">=</span><span class="n">validation_split</span><span class="p">,</span>
+                        <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span>
+                        <span class="o">**</span><span class="n">kwargs</span>
+                    <span class="p">)</span>
+                    <span class="n">w_after</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_weights</span><span class="p">())</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">set_weights</span><span class="p">(</span><span class="n">w_before</span>
+                                     <span class="o">+</span> <span class="n">learning_rate</span> <span class="o">*</span> <span class="n">freq</span><span class="p">[</span><span class="n">bucket_id</span><span class="p">]</span>
+                                     <span class="o">*</span> <span class="p">(</span><span class="n">w_after</span> <span class="o">-</span> <span class="n">w_before</span><span class="p">)</span>
+                                     <span class="o">+</span> <span class="n">global_momentum</span> <span class="o">*</span> <span class="p">(</span><span class="n">w_before</span> <span class="o">-</span> <span class="n">w_old</span><span class="p">))</span>
+                <span class="n">learning_rate</span> <span class="o">/=</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">decay_rate</span> <span class="o">*</span> <span class="n">epoch</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">is_variadic</span> <span class="o">=</span> <span class="kc">False</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">refit</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">generator</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">X</span><span class="p">,</span> <span class="n">Y</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">generator</span><span class="p">))</span>
+
+                <span class="n">n_inst</span><span class="p">,</span> <span class="n">n_objects</span><span class="p">,</span> <span class="n">n_features</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span>
+
+                <span class="n">input_layer</span> <span class="o">=</span> <span class="n">Input</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">n_objects</span><span class="p">,</span>
+                                           <span class="n">n_features</span><span class="p">),</span>
+                                    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;input_node&quot;</span><span class="p">)</span>
+
+                <span class="n">set_repr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_layer</span><span class="p">(</span><span class="n">input_layer</span><span class="p">)</span>
+                <span class="n">scores</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">join_input_layers</span><span class="p">(</span><span class="n">input_layer</span><span class="p">,</span> <span class="n">set_repr</span><span class="p">,</span>
+                                                <span class="n">n_objects</span><span class="o">=</span><span class="n">n_objects</span><span class="p">,</span>
+                                                <span class="n">n_layers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_hidden_set_layers</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">input_layer</span><span class="p">,</span> <span class="n">outputs</span><span class="o">=</span><span class="n">scores</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">loss</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">loss_function</span><span class="p">,</span> <span class="n">optimizer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="p">,</span> <span class="n">metrics</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">metrics</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Fitting started&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">generator</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
+                    <span class="n">x</span><span class="o">=</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">Y</span><span class="p">,</span> <span class="n">callbacks</span><span class="o">=</span><span class="n">callbacks</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="n">epochs</span><span class="p">,</span>
+                    <span class="n">validation_split</span><span class="o">=</span><span class="n">validation_split</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span>
+                    <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">fit_generator</span><span class="p">(</span>
+                    <span class="n">generator</span><span class="o">=</span><span class="n">generator</span><span class="p">,</span> <span class="n">callbacks</span><span class="o">=</span><span class="n">callbacks</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="n">epochs</span><span class="p">,</span>
+                    <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Fitting complete&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="mi">35</span><span class="p">,</span> <span class="n">inner_epochs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">callbacks</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">validation_split</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="n">global_lr</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">global_momentum</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span>
+            <span class="n">min_bucket_size</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">refit</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Fit a generic object ranking model on a provided set of queries.</span>
+
+<span class="sd">        The provided queries can be of a fixed size (numpy arrays) or of</span>
+<span class="sd">        varying sizes in which case dictionaries are expected as input.</span>
+
+<span class="sd">        For varying sizes a meta gradient descent is performed across the</span>
+<span class="sd">        different query sizes.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X : numpy array or dict</span>
+<span class="sd">            (n_instances, n_objects, n_features) if numpy array or</span>
+<span class="sd">            map from n_objects to numpy arrays</span>
+<span class="sd">        Y : numpy array or dict</span>
+<span class="sd">            (n_instances, n_objects) if numpy array or</span>
+<span class="sd">            map from n_objects to numpy arrays</span>
+<span class="sd">        epochs : int</span>
+<span class="sd">            Number of epochs to run if training for a fixed query size or</span>
+<span class="sd">            number of epochs of the meta gradient descent for the variadic model</span>
+<span class="sd">        inner_epochs : int</span>
+<span class="sd">            Number of epochs to train for each query size inside the variadic</span>
+<span class="sd">            model</span>
+<span class="sd">        callbacks : list</span>
+<span class="sd">            List of callbacks to be called during optimization</span>
+<span class="sd">        validation_split : float</span>
+<span class="sd">            Percentage of instances to split off to validate on</span>
+<span class="sd">        verbose : bool</span>
+<span class="sd">            Print verbose information</span>
+<span class="sd">        global_lr : float</span>
+<span class="sd">            Learning rate of the meta gradient descent (variadic model only)</span>
+<span class="sd">        global_momentum : float</span>
+<span class="sd">            Momentum for the meta gradient descent (variadic model only)</span>
+<span class="sd">        min_bucket_size : int</span>
+<span class="sd">            Restrict the training to queries of a minimum size</span>
+<span class="sd">        refit : bool</span>
+<span class="sd">            If True, create a new model object, otherwise continue fitting the</span>
+<span class="sd">            existing one if one exists.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fit</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="o">=</span><span class="n">Y</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="n">epochs</span><span class="p">,</span> <span class="n">inner_epochs</span><span class="o">=</span><span class="n">inner_epochs</span><span class="p">,</span>
+                  <span class="n">callbacks</span><span class="o">=</span><span class="n">callbacks</span><span class="p">,</span>
+                  <span class="n">validation_split</span><span class="o">=</span><span class="n">validation_split</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span>
+                  <span class="n">global_lr</span><span class="o">=</span><span class="n">global_lr</span><span class="p">,</span> <span class="n">global_momentum</span><span class="o">=</span><span class="n">global_momentum</span><span class="p">,</span>
+                  <span class="n">min_bucket_size</span><span class="o">=</span><span class="n">min_bucket_size</span><span class="p">,</span> <span class="n">refit</span><span class="o">=</span><span class="n">refit</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">fit_generator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">generator</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="mi">35</span><span class="p">,</span> <span class="n">steps_per_epoch</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+                      <span class="n">inner_epochs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">callbacks</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                      <span class="n">global_lr</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">global_momentum</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span> <span class="n">min_bucket_size</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span>
+                      <span class="n">refit</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Fit a generic object ranking model on a set of queries provided by</span>
+<span class="sd">        a generator.</span>
+
+<span class="sd">        The provided queries can be of a fixed size (numpy arrays) or of</span>
+<span class="sd">        varying sizes in which case dictionaries are expected as input.</span>
+
+<span class="sd">        For varying sizes a meta gradient descent is performed across the</span>
+<span class="sd">        different query sizes.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X : numpy array or dict</span>
+<span class="sd">            (n_instances, n_objects, n_features) if numpy array or</span>
+<span class="sd">            map from n_objects to numpy arrays</span>
+<span class="sd">        Y : numpy array or dict</span>
+<span class="sd">            (n_instances, n_objects) if numpy array or</span>
+<span class="sd">            map from n_objects to numpy arrays</span>
+<span class="sd">        epochs : int</span>
+<span class="sd">            Number of epochs to run if training for a fixed query size or</span>
+<span class="sd">            number of epochs of the meta gradient descent for the variadic model</span>
+<span class="sd">        steps_per_epoch : int</span>
+<span class="sd">            Number of batches to train per epoch</span>
+<span class="sd">        inner_epochs : int</span>
+<span class="sd">            Number of epochs to train for each query size inside the variadic</span>
+<span class="sd">            model</span>
+<span class="sd">        callbacks : list</span>
+<span class="sd">            List of callbacks to be called during optimization</span>
+<span class="sd">        verbose : bool</span>
+<span class="sd">            Print verbose information</span>
+<span class="sd">        global_lr : float</span>
+<span class="sd">            Learning rate of the meta gradient descent (variadic model only)</span>
+<span class="sd">        global_momentum : float</span>
+<span class="sd">            Momentum for the meta gradient descent (variadic model only)</span>
+<span class="sd">        min_bucket_size : int</span>
+<span class="sd">            Restrict the training to queries of a minimum size</span>
+<span class="sd">        refit : bool</span>
+<span class="sd">            If True, create a new model object, otherwise continue fitting the</span>
+<span class="sd">            existing one if one exists.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fit</span><span class="p">(</span><span class="n">generator</span><span class="o">=</span><span class="n">generator</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="n">epochs</span><span class="p">,</span>
+                  <span class="n">steps_per_epoch</span><span class="o">=</span><span class="n">steps_per_epoch</span><span class="p">,</span> <span class="n">inner_epochs</span><span class="o">=</span><span class="n">inner_epochs</span><span class="p">,</span>
+                  <span class="n">callbacks</span><span class="o">=</span><span class="n">callbacks</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span>
+                  <span class="n">global_lr</span><span class="o">=</span><span class="n">global_lr</span><span class="p">,</span> <span class="n">global_momentum</span><span class="o">=</span><span class="n">global_momentum</span><span class="p">,</span>
+                  <span class="n">min_bucket_size</span><span class="o">=</span><span class="n">min_bucket_size</span><span class="p">,</span> <span class="n">refit</span><span class="o">=</span><span class="n">refit</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_set_representation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">n_instances</span><span class="p">,</span> <span class="n">n_objects</span><span class="p">,</span> <span class="n">n_features</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Test Set instances </span><span class="si">{}</span><span class="s2"> objects </span><span class="si">{}</span><span class="s2"> features </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n_instances</span><span class="p">,</span> <span class="n">n_objects</span><span class="p">,</span> <span class="n">n_features</span><span class="p">))</span>
+        <span class="n">input_layer_scorer</span> <span class="o">=</span> <span class="n">Input</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">n_objects</span><span class="p">,</span>
+                                          <span class="bp">self</span><span class="o">.</span><span class="n">n_object_features</span><span class="p">),</span>
+                                   <span class="n">name</span><span class="o">=</span><span class="s2">&quot;input_node&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_hidden_set_layers</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_layer</span><span class="p">(</span><span class="n">input_layer_scorer</span><span class="p">)</span>
+            <span class="n">fr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_layer</span><span class="o">.</span><span class="n">cached_models</span><span class="p">[</span><span class="n">n_objects</span><span class="p">]</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_layer</span><span class="o">.</span><span class="n">cached_models</span><span class="p">[</span><span class="n">n_objects</span><span class="p">]</span>
+            <span class="n">X_n</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">fr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">n_objects</span><span class="p">,</span>
+                            <span class="n">fr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_object_features</span><span class="p">),</span>
+                           <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;float&quot;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_objects</span><span class="p">):</span>
+                <span class="n">X_n</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">X</span><span class="p">[:,</span> <span class="n">i</span><span class="p">],</span> <span class="n">fr</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">X_n</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">X</span>
+
+    <span class="k">def</span> <span class="nf">_predict_scores_fixed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Predict the scores for a fixed ranking size.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X : numpy array</span>
+<span class="sd">            float (n_instances, n_objects, n_features)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        scores : numpy array</span>
+<span class="sd">            float (n_instances, n_objects)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># model = self._construct_scoring_model(n_objects)</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_set_representation</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">n_instances</span><span class="p">,</span> <span class="n">n_objects</span><span class="p">,</span> <span class="n">n_features</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s2">&quot;After applying the set representations instances </span><span class="si">{}</span><span class="s2"> objects </span><span class="si">{}</span><span class="s2">&quot;</span>
+            <span class="s2">&quot;features </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n_instances</span><span class="p">,</span> <span class="n">n_objects</span><span class="p">,</span> <span class="n">n_features</span><span class="p">))</span>
+        <span class="n">input_layer_joint</span> <span class="o">=</span> <span class="n">Input</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">n_objects</span><span class="p">,</span> <span class="n">n_features</span><span class="p">),</span>
+                                  <span class="n">name</span><span class="o">=</span><span class="s2">&quot;input_joint_model&quot;</span><span class="p">)</span>
+        <span class="n">scores</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="n">inputs</span> <span class="o">=</span> <span class="p">[</span><span class="n">create_input_lambda</span><span class="p">(</span><span class="n">i</span><span class="p">)(</span><span class="n">input_layer_joint</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span>
+                  <span class="nb">range</span><span class="p">(</span><span class="n">n_objects</span><span class="p">)]</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_objects</span><span class="p">):</span>
+            <span class="n">joint</span> <span class="o">=</span> <span class="n">inputs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">joint_layers</span><span class="p">)):</span>
+                <span class="n">joint</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">joint_layers</span><span class="p">[</span><span class="n">j</span><span class="p">](</span><span class="n">joint</span><span class="p">)</span>
+            <span class="n">scores</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scorer</span><span class="p">(</span><span class="n">joint</span><span class="p">))</span>
+        <span class="n">scores</span> <span class="o">=</span> <span class="n">concatenate</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;final_scores&quot;</span><span class="p">)</span>
+        <span class="n">joint_model</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">input_layer_joint</span><span class="p">,</span> <span class="n">outputs</span><span class="o">=</span><span class="n">scores</span><span class="p">)</span>
+        <span class="n">predicted_scores</span> <span class="o">=</span> <span class="n">joint_model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Done predicting scores&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">predicted_scores</span>
+
+    <span class="k">def</span> <span class="nf">predict_scores</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Predict the latent utility scores for each object in X.</span>
+
+<span class="sd">        We need to distinguish several cases here:</span>
+<span class="sd">         * Predict with the non-variadic model on the same ranking size</span>
+<span class="sd">         * Predict with the non-variadic model on a new ranking size</span>
+<span class="sd">         * Predict with the variadic model on a known ranking size</span>
+<span class="sd">         * Predict with the variadic model on a new ranking size</span>
+<span class="sd">         * Predict on a variadic input</span>
+
+<span class="sd">        The simplest solution is creating (a) new model(s) in all of the cases,</span>
+<span class="sd">        even though it/they might already exist.</span>
+
+<span class="sd">         Parameters</span>
+<span class="sd">         ----------</span>
+<span class="sd">         X : dict or numpy array</span>
+<span class="sd">            Dictionary with a mapping from ranking size to numpy arrays</span>
+<span class="sd">            or a single numpy array of size:</span>
+<span class="sd">            (n_instances, n_objects, n_features)</span>
+<span class="sd">         &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Predicting scores&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="n">scores</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">ranking_size</span><span class="p">,</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">X</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">scores</span><span class="p">[</span><span class="n">ranking_size</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_predict_scores_fixed</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">scores</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_predict_scores_fixed</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">scores</span>
+
+    <span class="k">def</span> <span class="nf">set_tunable_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_hidden_set_units</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+                               <span class="n">n_hidden_set_layers</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                               <span class="n">n_hidden_joint_units</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+                               <span class="n">n_hidden_joint_layers</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                               <span class="n">reg_strength</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span>
+                               <span class="n">learning_rate</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span>
+                               <span class="n">batch_size</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span>
+                               <span class="o">**</span><span class="n">point</span><span class="p">):</span>
+        <span class="n">FATERankingCore</span><span class="o">.</span><span class="n">set_tunable_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_hidden_joint_units</span><span class="o">=</span><span class="n">n_hidden_joint_units</span><span class="p">,</span>
+                                               <span class="n">n_hidden_joint_layers</span><span class="o">=</span><span class="n">n_hidden_joint_layers</span><span class="p">,</span> <span class="n">reg_strength</span><span class="o">=</span><span class="n">reg_strength</span><span class="p">,</span>
+                                               <span class="n">learning_rate</span><span class="o">=</span><span class="n">learning_rate</span><span class="p">,</span>
+                                               <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span> <span class="o">**</span><span class="n">point</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_hidden_set_units</span> <span class="o">=</span> <span class="n">n_hidden_set_units</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_hidden_set_layers</span> <span class="o">=</span> <span class="n">n_hidden_set_layers</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_create_set_layers</span><span class="p">(</span>
+            <span class="n">activation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">activation</span><span class="p">,</span>
+            <span class="n">kernel_initializer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_initializer</span><span class="p">,</span>
+            <span class="n">kernel_regularizer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_regularizer</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;model&#39;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;models&#39;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">models</span> <span class="o">=</span> <span class="kc">None</span>
+
+
+
+<div class="viewcode-block" id="FATEObjectRanker"><a class="viewcode-back" href="../../api/fate.html#csrank.fate_ranking.FATEObjectRanker">[docs]</a><span class="k">class</span> <span class="nc">FATEObjectRanker</span><span class="p">(</span><span class="n">FATEObjectRankingCore</span><span class="p">,</span> <span class="n">ObjectRanker</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Create a FATE-network architecture for object ranking.</span>
+
+<span class="sd">        Training complexity is quadratic in the number of objects and</span>
+<span class="sd">        prediction complexity is only linear.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        n_object_features : int</span>
+<span class="sd">            Dimensionality of the feature space of each object</span>
+<span class="sd">        n_hidden_set_layers : int</span>
+<span class="sd">            Number of hidden layers for the context representation</span>
+<span class="sd">        n_hidden_set_units : int</span>
+<span class="sd">            Number of hidden units in each layer of the context representation</span>
+<span class="sd">        loss_function : function</span>
+<span class="sd">            Differentiable loss function for the score vector</span>
+<span class="sd">        metrics : list</span>
+<span class="sd">            List of evaluation metrics (can be non-differentiable)</span>
+<span class="sd">        **kwargs</span>
+<span class="sd">            Keyword arguments for the hidden units</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_object_features</span><span class="p">,</span>
+                 <span class="n">n_hidden_set_layers</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                 <span class="n">n_hidden_set_units</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+                 <span class="n">loss_function</span><span class="o">=</span><span class="n">smooth_rank_loss</span><span class="p">,</span>
+                 <span class="n">metrics</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">FATEObjectRankingCore</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                                       <span class="n">n_object_features</span><span class="o">=</span><span class="n">n_object_features</span><span class="p">,</span>
+                                       <span class="n">n_hidden_set_layers</span><span class="o">=</span><span class="n">n_hidden_set_layers</span><span class="p">,</span>
+                                       <span class="n">n_hidden_set_units</span><span class="o">=</span><span class="n">n_hidden_set_units</span><span class="p">,</span>
+                                       <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">loss_function</span> <span class="o">=</span> <span class="n">loss_function</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">FATEObjectRanker</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">metrics</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">metrics</span> <span class="o">=</span> <span class="p">[</span><span class="n">zero_one_rank_loss_for_scores_ties</span><span class="p">,</span>
+                       <span class="n">zero_one_rank_loss_for_scores</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">metrics</span> <span class="o">=</span> <span class="n">metrics</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Initializing network with object features </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">n_object_features</span><span class="p">))</span>
+
+<div class="viewcode-block" id="FATEObjectRanker.predict"><a class="viewcode-back" href="../../api/fate.html#csrank.fate_ranking.FATEObjectRanker.predict">[docs]</a>    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Predicting ranks&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">scores</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">predict_scores</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">predicted_rankings</span> <span class="o">=</span> <span class="n">scores_to_rankings</span><span class="p">(</span><span class="n">scores</span><span class="p">)</span>
+                <span class="n">result</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">predicted_rankings</span>
+            <span class="k">return</span> <span class="n">result</span>
+        <span class="k">return</span> <span class="n">ObjectRanker</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_predict_scores_fixed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">FATEObjectRankingCore</span><span class="o">.</span><span class="n">_predict_scores_fixed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+<span class="k">class</span> <span class="nc">FATEObjectChooser</span><span class="p">(</span><span class="n">FATEObjectRankingCore</span><span class="p">,</span> <span class="n">ObjectChooser</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loss_function</span><span class="o">=</span><span class="s1">&#39;categorical_hinge&#39;</span><span class="p">,</span> <span class="n">metrics</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">FATEObjectRankingCore</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">loss_function</span> <span class="o">=</span> <span class="n">loss_function</span>
+        <span class="k">if</span> <span class="n">metrics</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">metrics</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;categorical_accuracy&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">metrics</span> <span class="o">=</span> <span class="n">metrics</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">FATEObjectChooser</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">scores</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">predict_scores</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_variadic</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">scores</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">result</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Predicting chosen object&quot;</span><span class="p">)</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">scores</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+
+<span class="k">class</span> <span class="nc">FATELabelRanker</span><span class="p">(</span><span class="n">FATERankingCore</span><span class="p">,</span> <span class="n">LabelRanker</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loss_function</span><span class="o">=</span><span class="n">hinged_rank_loss</span><span class="p">,</span> <span class="n">metrics</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">label_ranker</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">loss_function</span> <span class="o">=</span> <span class="n">loss_function</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">FATELabelRanker</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">metrics</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">metrics</span> <span class="o">=</span> <span class="p">[</span><span class="n">zero_one_rank_loss_for_scores_ties</span><span class="p">,</span>
+                       <span class="n">zero_one_rank_loss_for_scores</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">metrics</span> <span class="o">=</span> <span class="n">metrics</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Initializing network with object features </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">n_object_features</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_connect_layers</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">one_hot_encoder_lr_data_conversion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">):</span>
+        <span class="n">X_trans</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">X</span><span class="p">):</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">Y</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">label_binarizer</span> <span class="o">=</span> <span class="n">LabelBinarizer</span><span class="p">()</span>
+            <span class="n">label_binarizer</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">Y</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+            <span class="n">b</span> <span class="o">=</span> <span class="n">label_binarizer</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">Y</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">b</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">X_trans</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">X_trans</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">X_trans</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">X_trans</span>
+
+    <span class="k">def</span> <span class="nf">_create_set_layers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">FATEObjectRankingCore</span><span class="o">.</span><span class="n">_create_set_layers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_connect_layers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_input_layers</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_repr</span><span class="p">,</span>
+                              <span class="bp">self</span><span class="o">.</span><span class="n">n_hidden_set_layers</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">callbacks</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">validation_split</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Fitting started&quot;</span><span class="p">)</span>
+        <span class="n">X_trans</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">one_hot_encoder_lr_data_conversion</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">input_layer</span><span class="p">,</span> <span class="n">outputs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">scores</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">loss</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">loss_function</span><span class="p">,</span> <span class="n">optimizer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="p">,</span>
+                           <span class="n">metrics</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">metrics</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
+            <span class="n">x</span><span class="o">=</span><span class="n">X_trans</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">Y</span><span class="p">,</span> <span class="n">callbacks</span><span class="o">=</span><span class="n">callbacks</span><span class="p">,</span>
+            <span class="n">validation_split</span><span class="o">=</span><span class="n">validation_split</span><span class="p">,</span>
+            <span class="n">batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span>
+            <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Fitting completed&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">predict_scores</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Predicting scores&quot;</span><span class="p">)</span>
+        <span class="n">n_instances</span><span class="p">,</span> <span class="n">n_objects</span><span class="p">,</span> <span class="n">n_features</span> <span class="o">=</span> <span class="n">tensorify</span><span class="p">(</span><span class="n">X</span><span class="p">)</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()</span><span class="o">.</span><span class="n">as_list</span><span class="p">()</span>
+        <span class="n">Y</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_instances</span><span class="p">):</span>
+            <span class="n">Y</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n_objects</span><span class="p">))</span>
+        <span class="n">Y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">Y</span><span class="p">)</span>
+        <span class="n">X_trans</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">one_hot_encoder_lr_data_conversion</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_trans</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Predicting ranks&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">LabelRanker</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">FATEContextualRanker</span><span class="p">(</span><span class="n">FATEObjectRankingCore</span><span class="p">,</span> <span class="n">ContextualRanker</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Xo</span><span class="p">,</span> <span class="n">Xc</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">predict_scores</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Xo</span><span class="p">,</span> <span class="n">Xc</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">([</span><span class="n">Xo</span><span class="p">,</span> <span class="n">Xc</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Xo</span><span class="p">,</span> <span class="n">Xc</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">predict_scores</span><span class="p">(</span><span class="n">Xo</span><span class="p">,</span> <span class="n">Xc</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">scores_to_rankings</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Karlson Pfannschmidt, Pritha Gupta, Eyke Hüllermeier.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'1.0.0',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

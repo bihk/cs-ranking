@@ -1,0 +1,856 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Benchmark algorithms &mdash; csrank 1.0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="FETA Architecture" href="feta.html" /> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> csrank
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples.html">Examples</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="fate.html">FATE Architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="feta.html">FETA Architecture</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Benchmark algorithms</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">csrank</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../api.html">API Reference</a> &raquo;</li>
+        
+      <li>Benchmark algorithms</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/api/benchmark.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast,
+.nboutput.nblast {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast + .nbinput {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+</style>
+<div class="section" id="benchmark-algorithms">
+<h1>Benchmark algorithms<a class="headerlink" href="#benchmark-algorithms" title="Permalink to this headline">¶</a></h1>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#csrank.objectranking.ExpectedRankRegression" title="csrank.objectranking.ExpectedRankRegression"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ExpectedRankRegression</span></code></a>(n_features[,&nbsp;alpha,&nbsp;…])</td>
+<td>Create an expected rank regression model.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#csrank.objectranking.RankNet" title="csrank.objectranking.RankNet"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RankNet</span></code></a>(n_features[,&nbsp;n_hidden,&nbsp;n_units,&nbsp;…])</td>
+<td>Create an instance of the RankNet architecture.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#csrank.objectranking.RankSVM" title="csrank.objectranking.RankSVM"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RankSVM</span></code></a>(n_features[,&nbsp;C,&nbsp;tol,&nbsp;normalize,&nbsp;…])</td>
+<td>Create an instance of the RankSVM model.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#csrank.objectranking.CmpNet" title="csrank.objectranking.CmpNet"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CmpNet</span></code></a>(n_features[,&nbsp;n_hidden,&nbsp;n_units,&nbsp;…])</td>
+<td>Create an instance of the CmpNet architecture.</td>
+</tr>
+</tbody>
+</table>
+<span class="target" id="module-csrank.objectranking"></span><dl class="class">
+<dt id="csrank.objectranking.ExpectedRankRegression">
+<em class="property">class </em><code class="descclassname">csrank.objectranking.</code><code class="descname">ExpectedRankRegression</code><span class="sig-paren">(</span><em>n_features</em>, <em>alpha=0.0</em>, <em>l1_ratio=0.5</em>, <em>tol=0.0001</em>, <em>normalize=True</em>, <em>fit_intercept=True</em>, <em>random_state=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/csrank/objectranking/expected_rank_regression.html#ExpectedRankRegression"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#csrank.objectranking.ExpectedRankRegression" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create an expected rank regression model.</p>
+<p>This model normalizes the ranks to [0, 1] and treats them as regression
+target. For α = 0 we employ simple linear regression. For α &gt; 0 the
+model becomes ridge regression (when l1_ratio = 0) or elastic net
+(when l1_ratio &gt; 0).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>n_features</strong> (<em>int</em>) – Number of features of the object space</li>
+<li><strong>alpha</strong> (<em>float</em><em>, </em><em>optional</em>) – Regularization strength</li>
+<li><strong>l1_ratio</strong> (<em>float</em><em>, </em><em>optional</em>) – Ratio between pure L2 (=0) or pure L1 (=1) regularization.</li>
+<li><strong>tol</strong> (<em>float</em><em>, </em><em>optional</em>) – Optimization tolerance</li>
+<li><strong>normalize</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, the regressors will be normalized before fitting.</li>
+<li><strong>fit_intercept</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, the linear model will also fit an intercept.</li>
+<li><strong>random_state</strong> (<em>int</em><em>, </em><em>RandomState instance</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Seed of the pseudorandom generator or a RandomState instance</li>
+<li><strong>**kwargs</strong> – Keyword arguments for the algorithms</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">References</p>
+<table class="docutils footnote" frame="void" id="id1" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[1]</td><td>Kamishima, T., Kazawa, H., &amp; Akaho, S. (2005, November).
+“Supervised ordering-an empirical survey.”,
+Fifth IEEE International Conference on Data Mining.</td></tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="csrank.objectranking.ExpectedRankRegression.fit">
+<code class="descname">fit</code><span class="sig-paren">(</span><em>X</em>, <em>Y</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/csrank/objectranking/expected_rank_regression.html#ExpectedRankRegression.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#csrank.objectranking.ExpectedRankRegression.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fit the object ranking algorithm to a set of objects X and
+rankings Y of those objects.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>X</strong> (<em>array-like</em><em>, </em><em>shape</em><em> (</em><em>n_samples</em><em>, </em><em>n_objects</em><em>, </em><em>n_features</em><em>)</em>) – Feature vectors of the objects</li>
+<li><strong>Y</strong> (<em>array-like</em><em>, </em><em>shape</em><em> (</em><em>n_samples</em><em>, </em><em>n_objects</em><em>)</em>) – Orderings of the objects</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><strong>self</strong> (<em>object</em>) – Returns self.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="csrank.objectranking.ExpectedRankRegression.predict">
+<code class="descname">predict</code><span class="sig-paren">(</span><em>X</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/csrank/objectranking/expected_rank_regression.html#ExpectedRankRegression.predict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#csrank.objectranking.ExpectedRankRegression.predict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Predict rankings for a given collection of sets of objects.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>X</strong> (<em>dict</em><em> or </em><em>numpy array</em>) – Dictionary with a mapping from ranking size to numpy arrays
+or a single numpy array of size:
+(n_instances, n_objects, n_features)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>Y</strong> (<em>dict or numpy array</em>) – Dictionary with a mapping from ranking size to numpy arrays
+or a single numpy array of size:
+(n_instances, n_objects)
+Predicted ranking</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="csrank.objectranking.ExpectedRankRegression.predict_pair">
+<code class="descname">predict_pair</code><span class="sig-paren">(</span><em>a</em>, <em>b</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/csrank/objectranking/expected_rank_regression.html#ExpectedRankRegression.predict_pair"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#csrank.objectranking.ExpectedRankRegression.predict_pair" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csrank.objectranking.ExpectedRankRegression.predict_scores">
+<code class="descname">predict_scores</code><span class="sig-paren">(</span><em>X</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/csrank/objectranking/expected_rank_regression.html#ExpectedRankRegression.predict_scores"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#csrank.objectranking.ExpectedRankRegression.predict_scores" title="Permalink to this definition">¶</a></dt>
+<dd><p>Predict the latent utility scores for each object in X.</p>
+<dl class="docutils">
+<dt>We need to distinguish several cases here:</dt>
+<dd><ul class="first last simple">
+<li>Predict with the non-variadic model on the same ranking size</li>
+<li>Predict with the non-variadic model on a new ranking size</li>
+<li>Predict with the variadic model on a known ranking size</li>
+<li>Predict with the variadic model on a new ranking size</li>
+<li>Predict on a variadic input</li>
+</ul>
+</dd>
+</dl>
+<p>The simplest solution is creating (a) new model(s) in all of the cases,
+even though it/they might already exist.</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>X <span class="classifier-delimiter">:</span> <span class="classifier">dict or numpy array</span></dt>
+<dd>Dictionary with a mapping from ranking size to numpy arrays
+or a single numpy array of size:
+(n_instances, n_objects, n_features)</dd>
+</dl>
+</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>Y</strong> (<em>dict or numpy array</em>) – Dictionary with a mapping from ranking size to numpy arrays
+or a single numpy array of size:
+(n_instances, n_objects)
+Predicted scores</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="csrank.objectranking.ExpectedRankRegression.set_tunable_parameters">
+<code class="descname">set_tunable_parameters</code><span class="sig-paren">(</span><em>alpha=1.0</em>, <em>l1_ratio=0.5</em>, <em>tol=0.0001</em>, <em>**point</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/csrank/objectranking/expected_rank_regression.html#ExpectedRankRegression.set_tunable_parameters"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#csrank.objectranking.ExpectedRankRegression.set_tunable_parameters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set tunable parameters of the algorithm to the values provided.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>point</strong> (<em>dict</em>) – Dictionary containing parameter values</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="csrank.objectranking.RankNet">
+<em class="property">class </em><code class="descclassname">csrank.objectranking.</code><code class="descname">RankNet</code><span class="sig-paren">(</span><em>n_features, n_hidden=2, n_units=8, loss_function=&lt;function binary_crossentropy&gt;, batch_normalization=True, kernel_regularizer=&lt;keras.regularizers.L1L2 object&gt;, non_linearities='relu', optimizer='adam', metrics=[&lt;function top_k_categorical_accuracy&gt;, &lt;function binary_accuracy&gt;], batch_size=256, random_state=None, **kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/csrank/objectranking/rank_net.html#RankNet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#csrank.objectranking.RankNet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create an instance of the RankNet architecture.</p>
+<p>RankNet breaks the rankings into pairwise comparisons and learns a
+latent utility model for the objects.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>n_features</strong> (<em>int</em>) – Number of features of the object space</li>
+<li><strong>n_hidden</strong> (<em>int</em>) – Number of hidden layers used in the scoring network</li>
+<li><strong>n_units</strong> (<em>int</em>) – Number of hidden units in each layer of the scoring network</li>
+<li><strong>loss_function</strong> (<em>function</em><em> or </em><em>string</em>) – Loss function to be used for the binary decision task of the
+pairwise comparisons</li>
+<li><strong>batch_normalization</strong> (<em>bool</em>) – Whether to use batch normalization in each hidden layer</li>
+<li><strong>kernel_regularizer</strong> (<em>function</em>) – Regularizer function applied to all the hidden weight matrices.</li>
+<li><strong>non_linearities</strong> (<em>function</em><em> or </em><em>string</em>) – Type of activation function to use in each hidden layer</li>
+<li><strong>optimizer</strong> (<em>function</em><em> or </em><em>string</em>) – Optimizer to use during stochastic gradient descent</li>
+<li><strong>metrics</strong> (<em>list</em>) – List of metrics to evaluate during training (can be
+non-differentiable)</li>
+<li><strong>batch_size</strong> (<em>int</em>) – Batch size to use during training</li>
+<li><strong>random_state</strong> (<em>int</em><em>, </em><em>RandomState instance</em><em> or </em><em>None</em>) – Seed of the pseudorandom generator or a RandomState instance</li>
+<li><strong>**kwargs</strong> – Keyword arguments for the algorithms</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">References</p>
+<table class="docutils footnote" frame="void" id="id2" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[1]</td><td>Burges, C. et al. (2005, August).
+“Learning to rank using gradient descent.”,
+In Proceedings of the 22nd international conference on Machine
+learning (pp. 89-96). ACM.</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id3" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[2]</td><td>Burges, C. J. (2010).
+“From ranknet to lambdarank to lambdamart: An overview.”,
+Learning, 11(23-581), 81.</td></tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="csrank.objectranking.RankNet.construct_model">
+<code class="descname">construct_model</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/csrank/objectranking/rank_net.html#RankNet.construct_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#csrank.objectranking.RankNet.construct_model" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csrank.objectranking.RankNet.evaluate">
+<code class="descname">evaluate</code><span class="sig-paren">(</span><em>X1_test</em>, <em>X2_test</em>, <em>Y_test</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/csrank/objectranking/rank_net.html#RankNet.evaluate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#csrank.objectranking.RankNet.evaluate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csrank.objectranking.RankNet.fit">
+<code class="descname">fit</code><span class="sig-paren">(</span><em>X</em>, <em>Y</em>, <em>epochs=10</em>, <em>callbacks=None</em>, <em>validation_split=0.1</em>, <em>verbose=0</em>, <em>**kwd</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/csrank/objectranking/rank_net.html#RankNet.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#csrank.objectranking.RankNet.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fit the object ranking algorithm to a set of objects X and
+rankings Y of those objects.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>X</strong> (<em>array-like</em><em>, </em><em>shape</em><em> (</em><em>n_samples</em><em>, </em><em>n_objects</em><em>, </em><em>n_features</em><em>)</em>) – Feature vectors of the objects</li>
+<li><strong>Y</strong> (<em>array-like</em><em>, </em><em>shape</em><em> (</em><em>n_samples</em><em>, </em><em>n_objects</em><em>)</em>) – Orderings of the objects</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><strong>self</strong> (<em>object</em>) – Returns self.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="csrank.objectranking.RankNet.predict">
+<code class="descname">predict</code><span class="sig-paren">(</span><em>X</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/csrank/objectranking/rank_net.html#RankNet.predict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#csrank.objectranking.RankNet.predict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Predict rankings for a given collection of sets of objects.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>X</strong> (<em>dict</em><em> or </em><em>numpy array</em>) – Dictionary with a mapping from ranking size to numpy arrays
+or a single numpy array of size:
+(n_instances, n_objects, n_features)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>Y</strong> (<em>dict or numpy array</em>) – Dictionary with a mapping from ranking size to numpy arrays
+or a single numpy array of size:
+(n_instances, n_objects)
+Predicted ranking</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="csrank.objectranking.RankNet.predict_pair">
+<code class="descname">predict_pair</code><span class="sig-paren">(</span><em>X1</em>, <em>X2</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/csrank/objectranking/rank_net.html#RankNet.predict_pair"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#csrank.objectranking.RankNet.predict_pair" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csrank.objectranking.RankNet.predict_scores">
+<code class="descname">predict_scores</code><span class="sig-paren">(</span><em>X</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/csrank/objectranking/rank_net.html#RankNet.predict_scores"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#csrank.objectranking.RankNet.predict_scores" title="Permalink to this definition">¶</a></dt>
+<dd><p>Predict the latent utility scores for each object in X.</p>
+<dl class="docutils">
+<dt>We need to distinguish several cases here:</dt>
+<dd><ul class="first last simple">
+<li>Predict with the non-variadic model on the same ranking size</li>
+<li>Predict with the non-variadic model on a new ranking size</li>
+<li>Predict with the variadic model on a known ranking size</li>
+<li>Predict with the variadic model on a new ranking size</li>
+<li>Predict on a variadic input</li>
+</ul>
+</dd>
+</dl>
+<p>The simplest solution is creating (a) new model(s) in all of the cases,
+even though it/they might already exist.</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>X <span class="classifier-delimiter">:</span> <span class="classifier">dict or numpy array</span></dt>
+<dd>Dictionary with a mapping from ranking size to numpy arrays
+or a single numpy array of size:
+(n_instances, n_objects, n_features)</dd>
+</dl>
+</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>Y</strong> (<em>dict or numpy array</em>) – Dictionary with a mapping from ranking size to numpy arrays
+or a single numpy array of size:
+(n_instances, n_objects)
+Predicted scores</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="csrank.objectranking.RankNet.set_tunable_parameters">
+<code class="descname">set_tunable_parameters</code><span class="sig-paren">(</span><em>n_hidden=32</em>, <em>n_units=2</em>, <em>reg_strength=0.0001</em>, <em>learning_rate=0.001</em>, <em>batch_size=128</em>, <em>**point</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/csrank/objectranking/rank_net.html#RankNet.set_tunable_parameters"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#csrank.objectranking.RankNet.set_tunable_parameters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set tunable parameters of the algorithm to the values provided.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>point</strong> (<em>dict</em>) – Dictionary containing parameter values</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="csrank.objectranking.RankSVM">
+<em class="property">class </em><code class="descclassname">csrank.objectranking.</code><code class="descname">RankSVM</code><span class="sig-paren">(</span><em>n_features</em>, <em>C=1.0</em>, <em>tol=0.0001</em>, <em>normalize=True</em>, <em>fit_intercept=True</em>, <em>random_state=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/csrank/objectranking/rank_svm.html#RankSVM"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#csrank.objectranking.RankSVM" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create an instance of the RankSVM model.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>n_features</strong> (<em>int</em>) – Number of features of the object space</li>
+<li><strong>C</strong> (<em>float</em><em>, </em><em>optional</em>) – Penalty parameter of the error term</li>
+<li><strong>tol</strong> (<em>float</em><em>, </em><em>optional</em>) – Optimization tolerance</li>
+<li><strong>normalize</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, the regressors will be normalized before fitting.</li>
+<li><strong>fit_intercept</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, the linear model will also fit an intercept.</li>
+<li><strong>random_state</strong> (<em>int</em><em>, </em><em>RandomState instance</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Seed of the pseudorandom generator or a RandomState instance</li>
+<li><strong>**kwargs</strong> – Keyword arguments for the algorithms</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">References</p>
+<table class="docutils footnote" frame="void" id="id4" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[1]</td><td>Joachims, T. (2002, July).
+“Optimizing search engines using clickthrough data.”,
+Proceedings of the eighth ACM SIGKDD international conference on
+Knowledge discovery and data mining (pp. 133-142). ACM.</td></tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="csrank.objectranking.RankSVM.fit">
+<code class="descname">fit</code><span class="sig-paren">(</span><em>X</em>, <em>Y</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/csrank/objectranking/rank_svm.html#RankSVM.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#csrank.objectranking.RankSVM.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fit the object ranking algorithm to a set of objects X and
+rankings Y of those objects.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>X</strong> (<em>array-like</em><em>, </em><em>shape</em><em> (</em><em>n_samples</em><em>, </em><em>n_objects</em><em>, </em><em>n_features</em><em>)</em>) – Feature vectors of the objects</li>
+<li><strong>Y</strong> (<em>array-like</em><em>, </em><em>shape</em><em> (</em><em>n_samples</em><em>, </em><em>n_objects</em><em>)</em>) – Orderings of the objects</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><strong>self</strong> (<em>object</em>) – Returns self.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="csrank.objectranking.RankSVM.predict">
+<code class="descname">predict</code><span class="sig-paren">(</span><em>X</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/csrank/objectranking/rank_svm.html#RankSVM.predict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#csrank.objectranking.RankSVM.predict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Predict rankings for a given collection of sets of objects.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>X</strong> (<em>dict</em><em> or </em><em>numpy array</em>) – Dictionary with a mapping from ranking size to numpy arrays
+or a single numpy array of size:
+(n_instances, n_objects, n_features)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>Y</strong> (<em>dict or numpy array</em>) – Dictionary with a mapping from ranking size to numpy arrays
+or a single numpy array of size:
+(n_instances, n_objects)
+Predicted ranking</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="csrank.objectranking.RankSVM.predict_pair">
+<code class="descname">predict_pair</code><span class="sig-paren">(</span><em>a</em>, <em>b</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/csrank/objectranking/rank_svm.html#RankSVM.predict_pair"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#csrank.objectranking.RankSVM.predict_pair" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csrank.objectranking.RankSVM.predict_scores">
+<code class="descname">predict_scores</code><span class="sig-paren">(</span><em>X</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/csrank/objectranking/rank_svm.html#RankSVM.predict_scores"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#csrank.objectranking.RankSVM.predict_scores" title="Permalink to this definition">¶</a></dt>
+<dd><p>Predict the latent utility scores for each object in X.</p>
+<dl class="docutils">
+<dt>We need to distinguish several cases here:</dt>
+<dd><ul class="first last simple">
+<li>Predict with the non-variadic model on the same ranking size</li>
+<li>Predict with the non-variadic model on a new ranking size</li>
+<li>Predict with the variadic model on a known ranking size</li>
+<li>Predict with the variadic model on a new ranking size</li>
+<li>Predict on a variadic input</li>
+</ul>
+</dd>
+</dl>
+<p>The simplest solution is creating (a) new model(s) in all of the cases,
+even though it/they might already exist.</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>X <span class="classifier-delimiter">:</span> <span class="classifier">dict or numpy array</span></dt>
+<dd>Dictionary with a mapping from ranking size to numpy arrays
+or a single numpy array of size:
+(n_instances, n_objects, n_features)</dd>
+</dl>
+</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>Y</strong> (<em>dict or numpy array</em>) – Dictionary with a mapping from ranking size to numpy arrays
+or a single numpy array of size:
+(n_instances, n_objects)
+Predicted scores</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="csrank.objectranking.RankSVM.set_tunable_parameters">
+<code class="descname">set_tunable_parameters</code><span class="sig-paren">(</span><em>C=1.0</em>, <em>tol=0.0001</em>, <em>**point</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/csrank/objectranking/rank_svm.html#RankSVM.set_tunable_parameters"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#csrank.objectranking.RankSVM.set_tunable_parameters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set tunable parameters of the algorithm to the values provided.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>point</strong> (<em>dict</em>) – Dictionary containing parameter values</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="csrank.objectranking.CmpNet">
+<em class="property">class </em><code class="descclassname">csrank.objectranking.</code><code class="descname">CmpNet</code><span class="sig-paren">(</span><em>n_features, n_hidden=2, n_units=8, loss_function=&lt;function binary_crossentropy&gt;, batch_normalization=True, kernel_regularizer=&lt;keras.regularizers.L1L2 object&gt;, non_linearities='relu', optimizer=&lt;keras.optimizers.Adam object&gt;, metrics=[&lt;function top_k_categorical_accuracy&gt;, &lt;function binary_accuracy&gt;], batch_size=256, random_state=None, **kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/csrank/objectranking/cmp_net.html#CmpNet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#csrank.objectranking.CmpNet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create an instance of the CmpNet architecture.</p>
+<p>CmpNet breaks the rankings into pairwise comparisons and learns a pairwise model for the each pair of object in the ranking.
+For prediction list of objects is converted in pair of objects and the pairwise predicate is evaluated using them.
+The outputs of the network for each pair of objects <span class="math notranslate nohighlight">\(U(x_1,x_2), U(x_2,x_1)\)</span> are evaluated.
+<span class="math notranslate nohighlight">\(U(x_1,x_2)\)</span> is a measure of how favorable it is for <span class="math notranslate nohighlight">\(x_1\)</span> than <span class="math notranslate nohighlight">\(x_2\)</span>.
+Ranking for the given set of objects <span class="math notranslate nohighlight">\(Q = \{ x_1 , \ldots , x_n \}\)</span>  is evaluted as follows:</p>
+<div class="math notranslate nohighlight">
+\[ρ(Q) = \operatorname{argsort}_{i \in [n]}  \; \left\{ \frac{1}{n-1} \sum_{j \in [n] \setminus \{i\}} U_1(x_i , x_j)\right\}\]</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>n_features</strong> (<em>int</em>) – Number of features of the object space</li>
+<li><strong>n_hidden</strong> (<em>int</em>) – Number of hidden layers used in the scoring network</li>
+<li><strong>n_units</strong> (<em>int</em>) – Number of hidden units in each layer of the scoring network</li>
+<li><strong>loss_function</strong> (<em>function</em><em> or </em><em>string</em>) – Loss function to be used for the binary decision task of the
+pairwise comparisons</li>
+<li><strong>batch_normalization</strong> (<em>bool</em>) – Whether to use batch normalization in each hidden layer</li>
+<li><strong>kernel_regularizer</strong> (<em>function</em>) – Regularizer function applied to all the hidden weight matrices.</li>
+<li><strong>non_linearities</strong> (<em>function</em><em> or </em><em>string</em>) – Type of activation function to use in each hidden layer</li>
+<li><strong>optimizer</strong> (<em>function</em><em> or </em><em>string</em>) – Optimizer to use during stochastic gradient descent</li>
+<li><strong>metrics</strong> (<em>list</em>) – List of metrics to evaluate during training (can be
+non-differentiable)</li>
+<li><strong>batch_size</strong> (<em>int</em>) – Batch size to use during training</li>
+<li><strong>random_state</strong> (<em>int</em><em>, </em><em>RandomState instance</em><em> or </em><em>None</em>) – Seed of the pseudorandom generator or a RandomState instance</li>
+<li><strong>**kwargs</strong> – Keyword arguments for the algorithms</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">References</p>
+<table class="docutils footnote" frame="void" id="id5" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[1]</td><td>Leonardo Rigutini, Tiziano Papini, Marco Maggini, and Franco Scarselli. 2011.
+SortNet: Learning to Rank by a Neural Preference Function.
+IEEE Trans. Neural Networks 22, 9 (2011), 1368–1380. <a class="reference external" href="https://doi.org/10.1109/TNN.2011.2160875">https://doi.org/10.1109/TNN.2011.2160875</a></td></tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="csrank.objectranking.CmpNet.construct_model">
+<code class="descname">construct_model</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/csrank/objectranking/cmp_net.html#CmpNet.construct_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#csrank.objectranking.CmpNet.construct_model" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csrank.objectranking.CmpNet.evaluate">
+<code class="descname">evaluate</code><span class="sig-paren">(</span><em>X1_test</em>, <em>X2_test</em>, <em>Y_test</em>, <em>**kwd</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/csrank/objectranking/cmp_net.html#CmpNet.evaluate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#csrank.objectranking.CmpNet.evaluate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csrank.objectranking.CmpNet.fit">
+<code class="descname">fit</code><span class="sig-paren">(</span><em>X</em>, <em>Y</em>, <em>epochs=10</em>, <em>callbacks=None</em>, <em>validation_split=0.1</em>, <em>verbose=0</em>, <em>**kwd</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/csrank/objectranking/cmp_net.html#CmpNet.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#csrank.objectranking.CmpNet.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fit the object ranking algorithm to a set of objects X and
+rankings Y of those objects.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>X</strong> (<em>array-like</em><em>, </em><em>shape</em><em> (</em><em>n_samples</em><em>, </em><em>n_objects</em><em>, </em><em>n_features</em><em>)</em>) – Feature vectors of the objects</li>
+<li><strong>Y</strong> (<em>array-like</em><em>, </em><em>shape</em><em> (</em><em>n_samples</em><em>, </em><em>n_objects</em><em>)</em>) – Orderings of the objects</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><strong>self</strong> (<em>object</em>) – Returns self.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="csrank.objectranking.CmpNet.predict">
+<code class="descname">predict</code><span class="sig-paren">(</span><em>X</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/csrank/objectranking/cmp_net.html#CmpNet.predict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#csrank.objectranking.CmpNet.predict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Predict rankings for a given collection of sets of objects.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>X</strong> (<em>dict</em><em> or </em><em>numpy array</em>) – Dictionary with a mapping from ranking size to numpy arrays
+or a single numpy array of size:
+(n_instances, n_objects, n_features)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>Y</strong> (<em>dict or numpy array</em>) – Dictionary with a mapping from ranking size to numpy arrays
+or a single numpy array of size:
+(n_instances, n_objects)
+Predicted ranking</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="csrank.objectranking.CmpNet.predict_pair">
+<code class="descname">predict_pair</code><span class="sig-paren">(</span><em>a</em>, <em>b</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/csrank/objectranking/cmp_net.html#CmpNet.predict_pair"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#csrank.objectranking.CmpNet.predict_pair" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csrank.objectranking.CmpNet.predict_scores">
+<code class="descname">predict_scores</code><span class="sig-paren">(</span><em>X</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/csrank/objectranking/cmp_net.html#CmpNet.predict_scores"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#csrank.objectranking.CmpNet.predict_scores" title="Permalink to this definition">¶</a></dt>
+<dd><p>Predict the latent utility scores for each object in X.</p>
+<dl class="docutils">
+<dt>We need to distinguish several cases here:</dt>
+<dd><ul class="first last simple">
+<li>Predict with the non-variadic model on the same ranking size</li>
+<li>Predict with the non-variadic model on a new ranking size</li>
+<li>Predict with the variadic model on a known ranking size</li>
+<li>Predict with the variadic model on a new ranking size</li>
+<li>Predict on a variadic input</li>
+</ul>
+</dd>
+</dl>
+<p>The simplest solution is creating (a) new model(s) in all of the cases,
+even though it/they might already exist.</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>X <span class="classifier-delimiter">:</span> <span class="classifier">dict or numpy array</span></dt>
+<dd>Dictionary with a mapping from ranking size to numpy arrays
+or a single numpy array of size:
+(n_instances, n_objects, n_features)</dd>
+</dl>
+</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>Y</strong> (<em>dict or numpy array</em>) – Dictionary with a mapping from ranking size to numpy arrays
+or a single numpy array of size:
+(n_instances, n_objects)
+Predicted scores</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="csrank.objectranking.CmpNet.set_tunable_parameters">
+<code class="descname">set_tunable_parameters</code><span class="sig-paren">(</span><em>n_hidden=32</em>, <em>n_units=2</em>, <em>reg_strength=0.0001</em>, <em>learning_rate=0.001</em>, <em>batch_size=128</em>, <em>**point</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/csrank/objectranking/cmp_net.html#CmpNet.set_tunable_parameters"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#csrank.objectranking.CmpNet.set_tunable_parameters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set tunable parameters of the algorithm to the values provided.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>point</strong> (<em>dict</em>) – Dictionary containing parameter values</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="feta.html" class="btn btn-neutral" title="FETA Architecture" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Karlson Pfannschmidt, Pritha Gupta, Eyke Hüllermeier.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'1.0.0',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

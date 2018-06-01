@@ -1,0 +1,431 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>FATE Architecture &mdash; csrank 1.0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="FETA Architecture" href="feta.html" />
+    <link rel="prev" title="API Reference" href="../api.html" /> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> csrank
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples.html">Examples</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">FATE Architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="feta.html">FETA Architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="benchmark.html">Benchmark algorithms</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">csrank</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../api.html">API Reference</a> &raquo;</li>
+        
+      <li>FATE Architecture</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/api/fate.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast,
+.nboutput.nblast {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast + .nbinput {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+</style>
+<div class="section" id="fate-architecture">
+<h1>FATE Architecture<a class="headerlink" href="#fate-architecture" title="Permalink to this headline">¶</a></h1>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#csrank.fate_ranking.FATEObjectRanker" title="csrank.fate_ranking.FATEObjectRanker"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FATEObjectRanker</span></code></a>(n_object_features[,&nbsp;…])</td>
+<td>Create a FATE-network architecture for object ranking.</td>
+</tr>
+</tbody>
+</table>
+<span class="target" id="module-csrank.fate_ranking"></span><dl class="class">
+<dt id="csrank.fate_ranking.FATEObjectRanker">
+<em class="property">class </em><code class="descclassname">csrank.fate_ranking.</code><code class="descname">FATEObjectRanker</code><span class="sig-paren">(</span><em>n_object_features</em>, <em>n_hidden_set_layers=2</em>, <em>n_hidden_set_units=32</em>, <em>loss_function=&lt;function identifiable.&lt;locals&gt;.wrap_loss&gt;</em>, <em>metrics=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/csrank/fate_ranking.html#FATEObjectRanker"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#csrank.fate_ranking.FATEObjectRanker" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a FATE-network architecture for object ranking.</p>
+<p>Training complexity is quadratic in the number of objects and
+prediction complexity is only linear.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>n_object_features</strong> (<em>int</em>) – Dimensionality of the feature space of each object</li>
+<li><strong>n_hidden_set_layers</strong> (<em>int</em>) – Number of hidden layers for the context representation</li>
+<li><strong>n_hidden_set_units</strong> (<em>int</em>) – Number of hidden units in each layer of the context representation</li>
+<li><strong>loss_function</strong> (<em>function</em>) – Differentiable loss function for the score vector</li>
+<li><strong>metrics</strong> (<em>list</em>) – List of evaluation metrics (can be non-differentiable)</li>
+<li><strong>**kwargs</strong> – Keyword arguments for the hidden units</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="csrank.fate_ranking.FATEObjectRanker.fit">
+<code class="descname">fit</code><span class="sig-paren">(</span><em>X</em>, <em>Y</em>, <em>epochs=35</em>, <em>inner_epochs=1</em>, <em>callbacks=None</em>, <em>validation_split=0.1</em>, <em>verbose=0</em>, <em>global_lr=1.0</em>, <em>global_momentum=0.9</em>, <em>min_bucket_size=500</em>, <em>refit=False</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#csrank.fate_ranking.FATEObjectRanker.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fit a generic object ranking model on a provided set of queries.</p>
+<p>The provided queries can be of a fixed size (numpy arrays) or of
+varying sizes in which case dictionaries are expected as input.</p>
+<p>For varying sizes a meta gradient descent is performed across the
+different query sizes.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>X</strong> (<em>numpy array</em><em> or </em><em>dict</em>) – (n_instances, n_objects, n_features) if numpy array or
+map from n_objects to numpy arrays</li>
+<li><strong>Y</strong> (<em>numpy array</em><em> or </em><em>dict</em>) – (n_instances, n_objects) if numpy array or
+map from n_objects to numpy arrays</li>
+<li><strong>epochs</strong> (<em>int</em>) – Number of epochs to run if training for a fixed query size or
+number of epochs of the meta gradient descent for the variadic model</li>
+<li><strong>inner_epochs</strong> (<em>int</em>) – Number of epochs to train for each query size inside the variadic
+model</li>
+<li><strong>callbacks</strong> (<em>list</em>) – List of callbacks to be called during optimization</li>
+<li><strong>validation_split</strong> (<em>float</em>) – Percentage of instances to split off to validate on</li>
+<li><strong>verbose</strong> (<em>bool</em>) – Print verbose information</li>
+<li><strong>global_lr</strong> (<em>float</em>) – Learning rate of the meta gradient descent (variadic model only)</li>
+<li><strong>global_momentum</strong> (<em>float</em>) – Momentum for the meta gradient descent (variadic model only)</li>
+<li><strong>min_bucket_size</strong> (<em>int</em>) – Restrict the training to queries of a minimum size</li>
+<li><strong>refit</strong> (<em>bool</em>) – If True, create a new model object, otherwise continue fitting the
+existing one if one exists.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="csrank.fate_ranking.FATEObjectRanker.fit_generator">
+<code class="descname">fit_generator</code><span class="sig-paren">(</span><em>generator</em>, <em>epochs=35</em>, <em>steps_per_epoch=10</em>, <em>inner_epochs=1</em>, <em>callbacks=None</em>, <em>verbose=0</em>, <em>global_lr=1.0</em>, <em>global_momentum=0.9</em>, <em>min_bucket_size=500</em>, <em>refit=False</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#csrank.fate_ranking.FATEObjectRanker.fit_generator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fit a generic object ranking model on a set of queries provided by
+a generator.</p>
+<p>The provided queries can be of a fixed size (numpy arrays) or of
+varying sizes in which case dictionaries are expected as input.</p>
+<p>For varying sizes a meta gradient descent is performed across the
+different query sizes.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>X</strong> (<em>numpy array</em><em> or </em><em>dict</em>) – (n_instances, n_objects, n_features) if numpy array or
+map from n_objects to numpy arrays</li>
+<li><strong>Y</strong> (<em>numpy array</em><em> or </em><em>dict</em>) – (n_instances, n_objects) if numpy array or
+map from n_objects to numpy arrays</li>
+<li><strong>epochs</strong> (<em>int</em>) – Number of epochs to run if training for a fixed query size or
+number of epochs of the meta gradient descent for the variadic model</li>
+<li><strong>steps_per_epoch</strong> (<em>int</em>) – Number of batches to train per epoch</li>
+<li><strong>inner_epochs</strong> (<em>int</em>) – Number of epochs to train for each query size inside the variadic
+model</li>
+<li><strong>callbacks</strong> (<em>list</em>) – List of callbacks to be called during optimization</li>
+<li><strong>verbose</strong> (<em>bool</em>) – Print verbose information</li>
+<li><strong>global_lr</strong> (<em>float</em>) – Learning rate of the meta gradient descent (variadic model only)</li>
+<li><strong>global_momentum</strong> (<em>float</em>) – Momentum for the meta gradient descent (variadic model only)</li>
+<li><strong>min_bucket_size</strong> (<em>int</em>) – Restrict the training to queries of a minimum size</li>
+<li><strong>refit</strong> (<em>bool</em>) – If True, create a new model object, otherwise continue fitting the
+existing one if one exists.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="csrank.fate_ranking.FATEObjectRanker.join_input_layers">
+<code class="descname">join_input_layers</code><span class="sig-paren">(</span><em>input_layer</em>, <em>*layers</em>, <em>n_layers</em>, <em>n_objects</em><span class="sig-paren">)</span><a class="headerlink" href="#csrank.fate_ranking.FATEObjectRanker.join_input_layers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Accepts input tensors and an arbitrary number of feature tensors
+and concatenates them into a joint layer.
+The input layers need to be given separately, because they need to be
+iterated over.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>input_layer</strong> (<em>input tensor</em><em> (</em><em>n_objects</em><em>, </em><em>n_features</em><em>)</em>) – </li>
+<li><strong>layers</strong> (<em>tensors</em>) – A number of tensors representing feature representations</li>
+<li><strong>n_layers</strong> (<em>int</em>) – Number of joint hidden layers</li>
+<li><strong>n_objects</strong> (<em>int</em>) – Number of objects</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="csrank.fate_ranking.FATEObjectRanker.predict">
+<code class="descname">predict</code><span class="sig-paren">(</span><em>X</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/csrank/fate_ranking.html#FATEObjectRanker.predict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#csrank.fate_ranking.FATEObjectRanker.predict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Predict a suitable ranking output for the given ranking problem.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="csrank.fate_ranking.FATEObjectRanker.predict_scores">
+<code class="descname">predict_scores</code><span class="sig-paren">(</span><em>X</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#csrank.fate_ranking.FATEObjectRanker.predict_scores" title="Permalink to this definition">¶</a></dt>
+<dd><p>Predict the latent utility scores for each object in X.</p>
+<dl class="docutils">
+<dt>We need to distinguish several cases here:</dt>
+<dd><ul class="first last simple">
+<li>Predict with the non-variadic model on the same ranking size</li>
+<li>Predict with the non-variadic model on a new ranking size</li>
+<li>Predict with the variadic model on a known ranking size</li>
+<li>Predict with the variadic model on a new ranking size</li>
+<li>Predict on a variadic input</li>
+</ul>
+</dd>
+</dl>
+<p>The simplest solution is creating (a) new model(s) in all of the cases,
+even though it/they might already exist.</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>X <span class="classifier-delimiter">:</span> <span class="classifier">dict or numpy array</span></dt>
+<dd>Dictionary with a mapping from ranking size to numpy arrays
+or a single numpy array of size:
+(n_instances, n_objects, n_features)</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="csrank.fate_ranking.FATEObjectRanker.set_tunable_parameters">
+<code class="descname">set_tunable_parameters</code><span class="sig-paren">(</span><em>n_hidden_set_units=32</em>, <em>n_hidden_set_layers=2</em>, <em>n_hidden_joint_units=32</em>, <em>n_hidden_joint_layers=2</em>, <em>reg_strength=0.0001</em>, <em>learning_rate=0.001</em>, <em>batch_size=128</em>, <em>**point</em><span class="sig-paren">)</span><a class="headerlink" href="#csrank.fate_ranking.FATEObjectRanker.set_tunable_parameters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set tunable parameters of the algorithm to the values provided.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>point</strong> (<em>dict</em>) – Dictionary containing parameter values</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="feta.html" class="btn btn-neutral float-right" title="FETA Architecture" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="../api.html" class="btn btn-neutral" title="API Reference" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Karlson Pfannschmidt, Pritha Gupta, Eyke Hüllermeier.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'1.0.0',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
